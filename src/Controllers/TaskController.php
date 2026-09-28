@@ -7,6 +7,8 @@ namespace App\Controllers;
 use App\Database\DB;
 use App\Cache\Cache;
 use App\Traits\ApiResponse;
+use App\DTO\CreateTaskDto;
+use App\DTO\UpdateTaskDto;
 
 class TaskController
 {
@@ -64,7 +66,7 @@ class TaskController
         $cacheKey = "task_{$taskId}";
         // Cache single task for 300 seconds (5 mins)
         $task = $this->cache->remember($cacheKey, 300, function () use ($taskId) {
-            $sql = 'SELECT id, title, completed, created_at, updated_at FROM tasks WHERE id = :id LIMIT 1';
+            $sql = 'SELECT id, title, dscr, completed, created_at, updated_at FROM tasks WHERE id = :id LIMIT 1';
             $stmt = DB::run($this->dbConfig, $sql, ['id' => $taskId]);
             return $stmt->fetch();
         });
@@ -85,16 +87,17 @@ class TaskController
      */
     public function store(): void
     {
-        $data = $this->getJsonBody();
+        $rawBody = $this->getJsonBody();
 
-        if (empty($data['title'])) {
-            $this->error('Missing required fields: title is required.', 422);
-        }
+        // Hydrate & validate CreateTaskDto (throws 422 ValidationException if invalid)
+        $taskDto = CreateTaskDto::fromArray($rawBody);
 
-        $sql = 'INSERT INTO tasks (title, created_at) VALUES (:title, NOW())';
+        $sql = 'INSERT INTO tasks (title, dscr, completed, created_at) VALUES (:title, :dscr, :completed, NOW())';
         $params = [
-            'title'  => htmlspecialchars((string)$data['title'], ENT_QUOTES, 'UTF-8'),
-//            'price' => (float)$data['price'],
+//            'title'  => htmlspecialchars((string)$data['title'], ENT_QUOTES, 'UTF-8'),
+            'title' => $taskDto->title,
+            'dscr' => $taskDto->dscr,
+            'completed' => $taskDto->completed
         ];
 
         DB::run($this->dbConfig, $sql, $params);
@@ -110,7 +113,7 @@ class TaskController
             'message' => 'Task created successfully.',
             'data' => [
                 'id' => $newId,
-                'title' => $data['title'],
+                'title' => $taskDto->title,
 //                'price' => (float)$data['price']
             ]
         ], 201);
@@ -130,31 +133,36 @@ class TaskController
         }
 
         // 2. Parse the JSON body payload
-        $data = $this->getJsonBody();
+        $rawBody = $this->getJsonBody();
+        $taskDto = UpdateTaskDto::fromArray($rawBody);
 
+/*
         if (empty($data['title'])) {
             $this->error('The title field is required for updating.', 422);
         }
+*/
 
-        // 3. Execute UPDATE query
+// Get only the fields sent by the client
+        $fieldsToUpdate = $taskDto->getPresentFields();
+        if (empty($fieldsToUpdate)) {
+            $this->error('No fields provided for update.', 400);
+        }
+
+        // build UPDATE query
         $sql = 'UPDATE tasks 
-                SET title = :title
-                  , updated_at = NOW()
+                SET updated_at = NOW()
         ';
 
         $params = [
-            'id'          => $taskId,
-            'title'       => htmlspecialchars((string)$data['title'], ENT_QUOTES, 'UTF-8'),
-//            'description' => isset($data['description']) ? htmlspecialchars((string)$data['description'], ENT_QUOTES, 'UTF-8') : null,
-//            'status'      => $data['status'] ?? 'pending',
+            'id' => $taskId,
         ];
-        if(isset($data['completed'])) {
-            $sql .= ' , completed = :completed';
-            $params['completed'] = (int)in_array((int)$data['completed'],[0,1]) ? (int)$data['completed'] : 0;
+
+        foreach($fieldsToUpdate as $fldKey => $fldVal) {
+            $sql .= ' , '.$fldKey.' = :'.$fldKey;
+            $params[$fldKey] = $taskDto->$fldKey;
         }
 
         $sql .= ' WHERE id = :id';
-
 
         DB::run($this->dbConfig, $sql, $params);
 

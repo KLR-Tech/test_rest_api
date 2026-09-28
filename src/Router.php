@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use App\Middleware\MiddlewareInterface;
+use App\Exception\ValidationException;
 use App\Http\HttpStatusCode;
 
 class Router
@@ -97,14 +98,25 @@ class Router
 //                $runner();
 //                return;
 
-                // Capture the pipeline result and output it if present
-                $result = $runner();
-                if (is_array($result) || $result instanceof \JsonSerializable) {
+                try {
+                    // Capture the pipeline result and output it if present
+                    $result = $runner();
+                    if (is_array($result) || $result instanceof \JsonSerializable) {
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+                    } else if (is_string($result)) {
+                        echo $result;
+                    }
+                } catch (ValidationException $e) {
+                    HttpStatusCode::UNPROCESSABLE_ENTITY_422->setResponseCode();
                     header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
-                } else if (is_string($result)) {
-                    echo $result;
-                }
+
+                    echo json_encode([
+                        'error' => HttpStatusCode::UNPROCESSABLE_ENTITY_422->label(),
+                        'message' => $e->getMessage(),
+                        'errors' => $e->getErrors(),
+                    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+                }                    
 
                 return;
             }
