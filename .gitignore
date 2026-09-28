@@ -1,0 +1,77 @@
+# -----------------------------------------------------------------------------
+# Application Logs & Temp Files
+# -----------------------------------------------------------------------------
+*.log
+/logs/*
+!/logs/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# -----------------------------------------------------------------------------
+# Environment & Secret Configuration
+# -----------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# -----------------------------------------------------------------------------
+# Dependency Directories
+# -----------------------------------------------------------------------------
+/vendor/
+
+# -----------------------------------------------------------------------------
+# Runtime Caches & Temporary Storage
+# -----------------------------------------------------------------------------
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/framework/*
+!/storage/framework/.gitkeep
+/tmp/
+
+# -----------------------------------------------------------------------------
+# IDE & Code Editor Files
+# -----------------------------------------------------------------------------
+# PhpStorm / IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Sublime Text / Atom / Eclipse
+*.sublime-project
+*.sublime-workspace
+.project
+.settings/
+
+# -----------------------------------------------------------------------------
+# Testing & Code Quality Artifacts
+# -----------------------------------------------------------------------------
+.phpunit.result.cache
+/coverage/
+/.build/
+/.php-cs-fixer.cache
+
+# -----------------------------------------------------------------------------
+# Operating System Junk
+# -----------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
