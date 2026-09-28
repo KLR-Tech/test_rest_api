@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Config\Env;
+Env::load(__DIR__ . '/../.env');
+
 use App\Router;
 use App\Middleware\CorsMiddleware;
 use App\Middleware\ApiAuthMiddleware;

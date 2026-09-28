@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Config\Env;
+
 return [
-    'host'     => '127.0.0.1',
-    'port'     => '3306',
-    'dbname'   => 'quick_api',
-    'user'     => 'root',
-    'password' => 'root',
-    'charset'  => 'utf8mb4',
+    'host'     => Env::get('DB_HOST', '127.0.0.1'),
+    'port'     => Env::get('DB_PORT', '3306'),
+    'dbname'   => Env::get('DB_NAME', 'quick_api'),
+    'user'     => Env::get('DB_USER', 'root'),
+    'password' => Env::get('DB_PASSWORD', ''),
+    'charset'  => Env::get('DB_CHARSET', 'utf8mb4'),
 ];
