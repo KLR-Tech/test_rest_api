@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Traits;
+use App\Http\HttpStatusCode;
 
 trait ApiResponse
 {
@@ -20,8 +21,9 @@ trait ApiResponse
     /**
      * Send a JSON error response.
      */
-    protected function error(string $message, int $statusCode = 400): void
+    protected function error(string $message, int|null $statusCode = null): void
     {
+        if(empty($statusCode)) $statusCode = HttpStatusCode::BAD_REQUEST_400->setResponseCode();
         $this->json(['error' => $message], $statusCode);
     }
 
@@ -39,7 +41,7 @@ trait ApiResponse
         try {
             return json_decode($rawInput, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
-            $this->error('Invalid JSON payload provided.', 400);
+            $this->error('Invalid JSON payload provided.', HttpStatusCode::BAD_REQUEST_400->setResponseCode());
             exit;
         }
     }
